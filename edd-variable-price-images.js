@@ -3,50 +3,45 @@
  */
 
 jQuery(document).ready(function ($) {
-	var button = null;
+	var button = null,
+	    key    = null;
 
-	wp.media.eddVariablePriceImage = {
+	wp.media.eddVPI = {
 		frame : function() {
 			if ( this._frame )
 				return this._frame;
-	 
+
 			this._frame = wp.media({
-				id        : 'eddVariablePriceImage',                
-				frame     : 'post',
-				state     : 'featured-image',
-				editing   : true,
+				id        : 'eddVPI',                
+				title     : wp.media.eddVPI.button.data( 'price' ),
+				button    :  {
+					text : wp.media.eddVPI.button.data( 'text' )
+				},
 				multiple  : false
-			}).on( 'menu:render:default', function(view) {
-				var views = {};
+			}).on( 'select', function() {
+				var attachment = wp.media.eddVPI._frame.state().get('selection').first().toJSON(),
+				    field      = $( 'input[name="edd_variable_prices[' + wp.media.eddVPI.key + '][image]"]' );
 
-				view.unset('library-separator');
-				view.unset('gallery');
-				view.unset('featured-image');
-				view.unset('embed');
+				console.log( attachment );
 
-				view.set(views);
+				field.val( attachment.id );
+				field.prev( 'img' ).attr( 'src', attachment.url );
 			});
 
 			return this._frame;
 		},
 	 
 		init : function() {
-			$( '.edd_variable_prices_wrapper' ).on( 'click', '.edd_vpi_assign', function(e) {
+			$( '#edd_price_fields' ).on( 'click', '.edd_vpi_assign', function(e) {
 				e.preventDefault();
 
-				wp.media.eddVariablePriceImage.button = $(this);
+				wp.media.eddVPI.button = $(this);
+				wp.media.eddVPI.key    = wp.media.eddVPI.button.parents( 'tr' ).index();
 
-				wp.media.eddVariablePriceImage.frame().open();
+				wp.media.eddVPI.frame().open();
 			});
-
-			wp.media.eddVariablePriceImage.frame().on( 'select', function( selection ) {
-				attachment = wp.media.eddVariablePriceImage._frame.state().get( 'selection' ).first().toJSON();
-
-				console.log( wp.media.eddVariablePriceImage.button );
-				console.log( attachment );
-			} );
 		}
 	};
 
-	$( wp.media.eddVariablePriceImage.init );
+	$( wp.media.eddVPI.init );
 });
