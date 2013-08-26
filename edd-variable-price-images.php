@@ -86,17 +86,15 @@ class Astoundify_EDD_VPI {
 	}
 
 	public function download_price_table_head() {
-		echo '<th style="width: 140px;">' . __( 'Image', 'edd_vpi' ) . '</th>';
+		echo '<th style="width: 100px;">' . __( 'Image', 'edd_vpi' ) . '</th>';
 	}
 
 	public function download_price_table_row( $post_id, $key, $args ) {
 		$prices = edd_get_variable_prices( $post_id );
 		$image  = $prices[ $key ][ 'image' ];
-		$attachment = wp_get_attachment_image_src( $image, array( 25, 25 ) );
 	?>
 			<td>
-				<a href="#" class="edd_vpi_assign button-secondary" style="margin: 3px 0 0; float: left;" data-price="<?php _e( 'Image for Price Option', 'edd_vpi' ); ?>" data-text="<?php _e( 'Assign Image', 'edd_vpi' ); ?>"><?php _e( 'Assign Image', 'edd_vpi' ); ?></a>
-				<img src="<?php echo esc_url( $attachment[ 0 ] ); ?>" width="28" height="28" style="margin: 3px 0 0 5px" />
+				<a href="#" class="edd_vpi_assign button-secondary" style="margin: 3px 0 0; " data-price="<?php _e( 'Image for Price Option', 'edd_vpi' ); ?>" data-text="<?php _e( 'Assign Image', 'edd_vpi' ); ?>"><?php _e( 'Assign Image', 'edd_vpi' ); ?></a>
 				<input type="hidden" name="edd_variable_prices[<?php echo esc_attr( $key ); ?>][image]" value="<?php echo esc_attr( $image ); ?>" />
 			</td>
 	<?php

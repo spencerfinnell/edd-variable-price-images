@@ -4,7 +4,8 @@
 
 jQuery(document).ready(function ($) {
 	var button = null,
-	    key    = null;
+	    key    = null,
+	    field  = null;
 
 	wp.media.eddVPI = {
 		frame : function() {
@@ -17,16 +18,25 @@ jQuery(document).ready(function ($) {
 				button    :  {
 					text : wp.media.eddVPI.button.data( 'text' )
 				},
+				library   : {
+                    type : 'image'
+                },
 				multiple  : false
 			}).on( 'select', function() {
-				var attachment = wp.media.eddVPI._frame.state().get('selection').first().toJSON(),
-				    field      = $( 'input[name="edd_variable_prices[' + wp.media.eddVPI.key + '][image]"]' );
+				var attachment = wp.media.eddVPI._frame.state().get('selection').first().toJSON();
 
-				console.log( attachment );
+				wp.media.eddVPI.field.val( attachment.id );
+			}).on( 'open', function() {
+				var selection = wp.media.eddVPI._frame.state().get('selection');
 
-				field.val( attachment.id );
-				field.prev( 'img' ).attr( 'src', attachment.url );
-			});
+				ids = [ wp.media.eddVPI.field.val() ];
+				
+				ids.forEach(function(id) {
+					attachment = wp.media.attachment(id);
+					attachment.fetch();
+					selection.add( attachment ? [ attachment ] : [] );
+				});
+	        });
 
 			return this._frame;
 		},
@@ -37,6 +47,7 @@ jQuery(document).ready(function ($) {
 
 				wp.media.eddVPI.button = $(this);
 				wp.media.eddVPI.key    = wp.media.eddVPI.button.parents( 'tr' ).index();
+				wp.media.eddVPI.field  = $( 'input[name="edd_variable_prices[' + wp.media.eddVPI.key + '][image]"]' );
 
 				wp.media.eddVPI.frame().open();
 			});
