@@ -115,10 +115,11 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * If we are editing a download, output our custom scripts.
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
+	 * @param $hook The current page hook
 	 * @return void
 	 */
 	public function admin_scripts( $hook ) {
@@ -131,7 +132,7 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * Add a new heading column to the variable price options table.
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
@@ -142,10 +143,14 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * Add a new column to the variable price options table row.
+	 * Outputs a button to edit/create a gallery of images for that price point. 
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
+	 * @param int $post_id The ID of the current download we are editing.
+	 * @param int $key The price option ID of the download.
+	 * @param array $args The default arguments.
 	 * @return void
 	 */
 	public function download_price_table_row( $post_id, $key, $args ) {
@@ -160,10 +165,16 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * Modify the output of the variable price options. Depending on the setting
+	 * selected, either output a list of image links, or a gallery of images.
+	 *
+	 * The gallery will respect the columns and link options set in the admin.
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
+	 * @param int $key The price option ID of the download.
+	 * @param stirng $price The current price.
+	 * @param int $download_id The ID of the current download.
 	 * @return void
 	 */
 	public function price_option( $key, $price, $download_id ) {
@@ -202,11 +213,15 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * When outputting a gallery, always load the full size images. This way
+	 * a single column gallery will look decent. 
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
-	 * @return void
+	 * @param array $out
+	 * @param unknown $pairs
+	 * @param array $atts
+	 * @return array $out The array or attributes for the shortcode.
 	 */
 	public function gallery_fullsize( $out, $pairs, $atts ) {
 		$out[ 'size' ] = 'full';
@@ -215,11 +230,14 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * When loading the preview image in the checkout, if there is a
+	 * custom gallery set for that price option, load the first image.
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
-	 * @return void
+	 * @param $image The current image HTML markup.
+	 * @param $item The current line item we are viewing.
+	 * @return mixed
 	 */
 	public function checkout_image( $image, $item ) {
 		global $edd_options;
@@ -238,10 +256,11 @@ class Astoundify_EDD_VPI {
 	}
 
 	/**
-	 * 
+	 * Get the IDs from a specific gallery shortcode. 
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
+	 * @param string $shortcode The gallery shortcode to search.
 	 * @return void
 	 */
 	public function get_gallery_ids( $shortcode ) {
