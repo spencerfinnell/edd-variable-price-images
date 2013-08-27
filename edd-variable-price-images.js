@@ -13,7 +13,9 @@ jQuery(document).ready(function ($) {
 				return this._frame;
 
 			this._frame = wp.media({
-				id        : 'eddVPI',                
+				id        : 'eddVPI',
+				state     : 'gallery-edit',
+				frame     : 'post',
 				title     : wp.media.eddVPI.button.data( 'price' ),
 				button    :  {
 					text : wp.media.eddVPI.button.data( 'text' )
@@ -21,24 +23,46 @@ jQuery(document).ready(function ($) {
 				library   : {
                     type : 'image'
                 },
-				multiple  : false
-			}).on( 'select', function() {
-				var attachment = wp.media.eddVPI._frame.state().get('selection').first().toJSON();
-
-				wp.media.eddVPI.field.val( attachment.id );
-			}).on( 'open', function() {
-				var selection = wp.media.eddVPI._frame.state().get('selection');
-
-				ids = [ wp.media.eddVPI.field.val() ];
-				
-				ids.forEach(function(id) {
-					attachment = wp.media.attachment(id);
-					attachment.fetch();
-					selection.add( attachment ? [ attachment ] : [] );
-				});
-	        });
+				multiple  : true,
+				selection : wp.media.eddVPI.selection()
+			});
 
 			return this._frame;
+		},
+
+		selection : function() {
+			var shortcode = wp.shortcode.next( 'gallery', wp.media.eddVPI.field.val() ),
+				defaultPostId = wp.media.gallery.defaults.id,
+				attachments, selection;
+		 
+			// Bail if we didn't match the shortcode or all of the content.
+			if ( ! shortcode )
+				return;
+		 
+			// Ignore the rest of the match object.
+			shortcode = shortcode.shortcode;
+		 
+			if ( _.isUndefined( shortcode.get('id') ) && ! _.isUndefined( defaultPostId ) )
+				shortcode.set( 'id', defaultPostId );
+		 
+			attachments = wp.media.gallery.attachments( shortcode );
+			selection = new wp.media.model.Selection( attachments.models, {
+				props:    attachments.props.toJSON(),
+				multiple: true
+			});
+			 
+			selection.gallery = attachments.gallery;
+		 
+			// Fetch the query's attachments, and then break ties from the
+			// query to allow for sorting.
+			selection.more().done( function() {
+				// Break ties with the query.
+				selection.props.set({ query: false });
+				selection.unmirror();
+				selection.props.unset('orderby');
+			});
+		 
+			return selection;
 		},
 	 
 		init : function() {
@@ -50,6 +74,10 @@ jQuery(document).ready(function ($) {
 				wp.media.eddVPI.field  = $( 'input[name="edd_variable_prices[' + wp.media.eddVPI.key + '][image]"]' );
 
 				wp.media.eddVPI.frame().open();
+
+				wp.media.eddVPI.frame().on( 'update', function(selection) {
+					wp.media.eddVPI.field.val( wp.media.gallery.shortcode( selection ).string() );
+				});
 			});
 		}
 	};
