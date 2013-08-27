@@ -1,16 +1,25 @@
 <?php
 /**
- * Plugin Name: Easy Digital Downloads - Variable Price Images
- * Plugin URI:  https://github.com/Astoundify/edd-variable-price-images
- * Description: Assign a specific image for each variable price option.
- * Author:      Astoundify
- * Author URI:  http://astoundify.com
+ * Plugin Name: Easy Digital Downloads - Variable Price Image Galleries
+ * Plugin URI:  https://easydigitaldownloads.com/extensions/variable-price-images
+ * Description: Create image galleries for each variable price option. Can either be displayed as a list of links, or a gallery.
+ * Author:      Spencer Finnell
+ * Author URI:  http://spencerfinnell.com
  * Version:     1.0
  * Text Domain: edd_vpi
+ * Domain Path: languages
  */
 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
+
+/**
+ * License
+ */
+if( ! class_exists( 'EDD_License' ) )
+	include( dirname( __FILE__ ) . '/EDD_License_Handler.php' );
+
+$license = new EDD_License( __FILE__, 'Variable Price Images', '1.0', 'Spencer Finnell' );
 
 class Astoundify_EDD_VPI {
 
@@ -69,7 +78,9 @@ class Astoundify_EDD_VPI {
 	 */
 	private function setup_actions() {
 		add_action( 'edd_after_price_option', array( $this, 'price_option' ), 10, 3 );
-		add_filter( 'edd_checkout_image', array( $this, 'checkout_image' ), 10, 2 );
+		add_action( 'edd_checkout_table_header_first', array( $this, 'table_header_first' ) );
+		add_action( 'edd_checkout_table_body_first', array( $this, 'table_body_first' ) );
+		add_filter( 'get_post_metadata', array( $this, 'force_no_thumbnail' ), 10, 4 );
 		
 		$this->load_textdomain();
 
@@ -229,17 +240,21 @@ class Astoundify_EDD_VPI {
 		return $out;
 	}
 
+	public function table_header_first() {
+		$width = apply_filters( 'edd_checkout_image_size', array( 25,25 ) );
+
+		echo '<th style="width: ' . $width[0] . 'px"></th>';
+	}
+
 	/**
-	 * When loading the preview image in the checkout, if there is a
-	 * custom gallery set for that price option, load the first image.
+	 * If there is a custom image for their chosen variation, show a link to it.
 	 *
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
-	 * @param $image The current image HTML markup.
 	 * @param $item The current line item we are viewing.
 	 * @return mixed
 	 */
-	public function checkout_image( $image, $item ) {
+	public function table_body_first( $item ) {
 		global $edd_options;
 
 		if ( ! is_page( $edd_options[ 'purchase_page' ] ) )
@@ -248,11 +263,20 @@ class Astoundify_EDD_VPI {
 		$prices = edd_get_variable_prices( $item[ 'id' ] );
 
 		if ( ! isset ( $prices[ $item[ 'options' ][ 'price_id' ] ][ 'image' ] ) )
-			return $image;
+			return;
 
 		$images = $this->get_gallery_ids( $prices[ $item[ 'options' ][ 'price_id' ] ][ 'image' ] );
+	
+		echo '<td>' . wp_get_attachment_link( $images[0], apply_filters( 'edd_checkout_image_size', array( 25,25 ) ) ) . '</td>';
+	}
 
-		return wp_get_attachment_link( $images[0], apply_filters( 'edd_checkout_image_size', array( 25, 25 ) ) );
+	public function force_no_thumbnail( $metadata, $object_id, $meta_key, $single ) {
+		global $edd_options;
+
+		if ( is_page( $edd_options[ 'purchase_page' ] ) && '_thumbnail_id' == $meta_key )
+			return false;
+
+		return $metadata;
 	}
 
 	/**
@@ -261,7 +285,7 @@ class Astoundify_EDD_VPI {
 	 * @since Easy Digital Downloads - Variable Price Images 1.0
 	 *
 	 * @param string $shortcode The gallery shortcode to search.
-	 * @return void
+	 * @return array $images An array of image IDs.
 	 */
 	public function get_gallery_ids( $shortcode ) {
 		$pattern = get_shortcode_regex();
